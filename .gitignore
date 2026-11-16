@@ -1,0 +1,7 @@
+bin/
+*.class
+.idea/
+.vscode/
+*.iml
+*.log
+sources.txt
