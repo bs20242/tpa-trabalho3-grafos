@@ -12,36 +12,15 @@ public class CaixeiroViajante {
         if (grafo.quantidadeVertices() > LIMITE_LOCAIS) {
             throw new IllegalArgumentException("A busca exata aceita ate 10 locais, incluindo a loja.");
         }
-        ListaEncadeada<T> valores = grafo.obterVertices();
-        T inicio = valores.pesquisar(origem);
-        if (inicio == null) throw new IllegalArgumentException("A origem nao esta no grafo.");
+        int indiceOrigem = grafo.indiceDe(origem);
+        if (indiceOrigem < 0) throw new IllegalArgumentException("A origem nao esta no grafo.");
 
-        int n = valores.quantidadeNos();
-        float[][] pesos = new float[n][n];
-        int indiceOrigem = 0;
-        int i = 0;
-        // Consulta as listas uma vez e guarda os pesos para a busca recursiva.
-        for (T de : valores) {
-            if (de == inicio) indiceOrigem = i;
-            int j = 0;
-            for (T para : valores) pesos[i][j++] = grafo.pesoEntre(de, para);
-            i++;
-        }
+        float[][] pesos = grafo.matrizPesos();
         Busca busca = new Busca(pesos, indiceOrigem);
         busca.visitar(indiceOrigem, 1, 0);
         if (busca.melhorCaminho == null) return null;
 
-        ListaEncadeada<T> percurso = new ListaEncadeada<>(grafo.getComparador(), false);
-        // A lista insere no inicio: copiar de tras para frente preserva a rota.
-        for (int posicao = n; posicao >= 0; posicao--) {
-            int indice = 0;
-            for (T valor : valores) {
-                if (indice++ == busca.melhorCaminho[posicao]) {
-                    percurso.adicionar(valor);
-                    break;
-                }
-            }
-        }
+        ListaEncadeada<T> percurso = grafo.montarSequencia(busca.melhorCaminho, pesos.length + 1);
         return new Rota<>(percurso, busca.menorDistancia);
     }
 
@@ -77,9 +56,12 @@ public class CaixeiroViajante {
 
             for (int proximo = 0; proximo < pesos.length; proximo++) {
                 if (!visitados[proximo] && Float.isFinite(pesos[atual][proximo])) {
+                    double novaDistancia = distancia + pesos[atual][proximo];
+                    // Como os pesos sao nao negativos, um caminho parcial ja maior ou igual nao melhora a resposta.
+                    if (novaDistancia >= menorDistancia) continue;
                     visitados[proximo] = true;
                     caminho[quantidade] = proximo;
-                    visitar(proximo, quantidade + 1, distancia + pesos[atual][proximo]);
+                    visitar(proximo, quantidade + 1, novaDistancia);
                     // Desfaz a escolha para tentar outra ordem de visita.
                     visitados[proximo] = false;
                 }

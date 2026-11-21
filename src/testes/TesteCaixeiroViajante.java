@@ -12,6 +12,7 @@ public class TesteCaixeiroViajante {
         testarMenorRota();
         testarSemRota();
         testarCasosPequenos();
+        testarPodaEmGrafoCompleto();
         testarLimites();
         System.out.println("TesteCaixeiroViajante: todos os testes passaram.");
     }
@@ -69,6 +70,32 @@ public class TesteCaixeiroViajante {
         grafo.adicionarAresta(2, 3, 0);
         grafo.adicionarAresta(3, 1, 1.25f);
         assert CaixeiroViajante.calcular(grafo, 1).getDistanciaTotal() == 1.75;
+    }
+
+    private static void testarPodaEmGrafoCompleto() {
+        Grafo<Integer> grafo = new Grafo<>(Integer::compare);
+        for (int i = 0; i < 6; i++) grafo.adicionarVertice(i);
+        // Liga todos os pares com peso alto primeiro e um ciclo barato de custo 6.
+        for (int i = 0; i < 6; i++) {
+            for (int j = i + 1; j < 6; j++) {
+                boolean noCiclo = (j == i + 1) || (i == 0 && j == 5);
+                grafo.adicionarAresta(i, j, noCiclo ? 1 : 50);
+            }
+        }
+        Rota<Integer> rota = CaixeiroViajante.calcular(grafo, 0);
+        assert rota != null && rota.getDistanciaTotal() == 6;
+
+        // Com peso zero numa aresta fora do ciclo inicial, o ramo de custo menor ainda deve vencer.
+        Grafo<Integer> comZero = new Grafo<>(Integer::compare);
+        for (int i = 0; i < 4; i++) comZero.adicionarVertice(i);
+        comZero.adicionarAresta(0, 1, 10);
+        comZero.adicionarAresta(1, 2, 10);
+        comZero.adicionarAresta(2, 3, 10);
+        comZero.adicionarAresta(3, 0, 10);
+        comZero.adicionarAresta(0, 2, 0);
+        comZero.adicionarAresta(1, 3, 1);
+        Rota<Integer> rotaZero = CaixeiroViajante.calcular(comZero, 0);
+        assert rotaZero != null && rotaZero.getDistanciaTotal() == 21;
     }
 
     private static void testarLimites() {

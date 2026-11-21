@@ -3,7 +3,7 @@ package grafos;
 import colecao.ListaEncadeada;
 import java.util.Iterator;
 
-/** Sequencia de visitas, incluindo a volta a origem, e sua distancia total. */
+/** Sequencia de locais de um percurso e sua distancia total. */
 public class Rota<T> implements Iterable<T> {
     private final ListaEncadeada<T> locais;
     private final double distanciaTotal;

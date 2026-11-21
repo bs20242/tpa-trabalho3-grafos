@@ -76,6 +76,43 @@ public class Grafo<T> {
         return comparador;
     }
 
+    int indiceDe(T valor) {
+        Vertice<T> vertice = localizarVertice(valor);
+        return vertice == null ? -1 : vertice.indice;
+    }
+
+    float[][] matrizPesos() {
+        int n = quantidadeVertices();
+        float[][] matriz = new float[n][n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                matriz[i][j] = Float.POSITIVE_INFINITY;
+            }
+        }
+        for (Vertice<T> vertice : vertices) {
+            for (Aresta<T> aresta : vertice.vizinhos) {
+                matriz[vertice.indice][aresta.destino.indice] = aresta.peso;
+            }
+        }
+        return matriz;
+    }
+
+    ListaEncadeada<T> montarSequencia(int[] indices, int tamanho) {
+        ListaEncadeada<T> sequencia = new ListaEncadeada<>(comparador, false);
+        // A lista insere no inicio: copiar de tras para frente preserva a ordem.
+        for (int i = tamanho - 1; i >= 0; i--) {
+            sequencia.adicionar(valorDoIndice(indices[i]));
+        }
+        return sequencia;
+    }
+
+    private T valorDoIndice(int indice) {
+        for (Vertice<T> vertice : vertices) {
+            if (vertice.indice == indice) return vertice.valor;
+        }
+        throw new IllegalArgumentException("Indice invalido: " + indice);
+    }
+
     /** Retorna infinito positivo quando nao existe ligacao direta entre os valores. */
     public float pesoEntre(T origem, T destino) {
         Vertice<T> inicio = localizarVertice(origem);

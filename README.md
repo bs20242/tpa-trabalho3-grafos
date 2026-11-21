@@ -2,18 +2,19 @@
 
 TPA - IFES Campus Serra. Professor: Victorio Albani de Carvalho.
 
-Tema: calcular uma rota de entregas que saia de uma loja, visite todos os locais cadastrados e volte à loja, com a menor distância total.
+Tema: calcular uma rota de entregas que saia de uma loja, visite todos os locais cadastrados e volte à loja, ou encontrar o menor caminho entre dois locais (entrega expressa), com a menor distância total.
 
 ## O que já funciona
 
 - Grafo genérico, não direcionado e com pesos, usando listas de adjacência.
 - Inclusão de vértices sem repetição e ligações entre locais já cadastrados.
 - Caminhamento em largura a partir de um local.
-- Busca exata da menor rota por enumeração das ordens de visita, com até 10 locais contando a loja.
-- Testes da lista reaproveitada, do grafo e da rota.
+- Busca exata da menor rota por enumeração das ordens de visita com poda (*branch and bound*), com até 10 locais contando a loja.
+- Cálculo do menor caminho entre dois locais pelo algoritmo de Dijkstra (entrega expressa), sem limite de 10 locais.
+- Testes da lista reaproveitada, do grafo, da rota completa e do Dijkstra.
 - Texto inicial das seções 1 e 2 em [relatorio/Secoes_1_e_2.md](relatorio/Secoes_1_e_2.md).
 
-O aplicativo com menu e leitura de arquivo ainda será integrado. O tema e a estratégia precisam ser apresentados ao professor, conforme a etapa 1 do enunciado. O algoritmo da rota é uma proposta implementada para avaliação; o limite de 10 locais é uma escolha desta versão, não uma exigência do professor.
+O aplicativo com menu e leitura de arquivo ainda será integrado. O tema e a estratégia precisam ser apresentados ao professor, conforme a etapa 1 do enunciado. Os algoritmos da rota e do menor caminho foram implementados para avaliação; o limite de 10 locais na rota completa é uma escolha desta versão, não uma exigência do professor.
 
 ## Bibliotecas reaproveitadas
 
@@ -32,6 +33,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\compilar.ps1
 java -ea -cp bin testes.TesteLista
 java -ea -cp bin testes.TesteGrafo
 java -ea -cp bin testes.TesteCaixeiroViajante
+java -ea -cp bin testes.TesteDijkstra
 ```
 
 No PowerShell, a compilação também pode ser chamada com `./compilar.ps1`.
@@ -55,9 +57,14 @@ if (rota == null) {
     System.out.println(rota);
     System.out.println("Distancia total: " + rota.getDistanciaTotal());
 }
+
+Rota<String> expressa = Dijkstra.calcular(grafo, "Loja", "Cliente B");
+if (expressa != null) {
+    System.out.println("Entrega expressa: " + expressa + " (" + expressa.getDistanciaTotal() + ")");
+}
 ```
 
-Importe `grafos.Grafo`, `grafos.CaixeiroViajante` e `grafos.Rota`. No exemplo, qualquer uma das duas ordens de visita tem distância total 9.
+Importe `grafos.Grafo`, `grafos.CaixeiroViajante`, `grafos.Dijkstra` e `grafos.Rota`. No exemplo, qualquer uma das duas ordens do ciclo completo tem distância total 9, e a entrega expressa entre `Loja` e `Cliente B` retorna `[Loja, Cliente B]` com distância 4.
 
 | Método | Comportamento |
 |---|---|
@@ -66,9 +73,10 @@ Importe `grafos.Grafo`, `grafos.CaixeiroViajante` e `grafos.Rota`. No exemplo, q
 | `pesoEntre(origem, destino)` | Consulta uma ligação direta. Retorna infinito positivo se ela não existir. |
 | `caminharEmLargura(origem)` | Retorna a sequência dos vértices alcançáveis; `[]` se a origem não existir. |
 | `obterVertices()` | Retorna uma cópia da lista de valores. Os objetos armazenados continuam sendo os mesmos. |
-| `CaixeiroViajante.calcular(grafo, origem)` | Retorna uma `Rota` ou `null` quando não há percurso válido. |
+| `CaixeiroViajante.calcular(grafo, origem)` | Retorna a menor `Rota` passando por todos os vértices e voltando à origem, ou `null` quando não há percurso válido. |
+| `Dijkstra.calcular(grafo, origem, destino)` | Retorna a menor `Rota` entre `origem` e `destino` (entrega expressa), ou `null` quando não há caminho entre eles. |
 
-Pesos negativos, infinitos e `NaN` causam `IllegalArgumentException`. Peso zero é permitido. A busca da rota também lança essa exceção para origem ausente, grafo nulo ou mais de 10 locais; o menu deve mostrar o motivo ao usuário.
+Pesos negativos, infinitos e `NaN` causam `IllegalArgumentException`. Peso zero é permitido. `CaixeiroViajante.calcular` lança essa exceção para origem ausente, grafo nulo ou mais de 10 locais; `Dijkstra.calcular` lança para grafo nulo, origem ausente ou destino ausente (sem limite de 10 locais); o menu deve mostrar o motivo ao usuário.
 
 Os valores usados como chave não devem ser alterados enquanto estiverem no grafo. O comparador precisa representar a identificação dos locais. O caminhamento em largura não é a rota de entregas e não minimiza distâncias.
 
@@ -80,8 +88,8 @@ O arquivo contém quatro locais e seis ligações. A menor distância saindo de 
 
 ## Próxima integração do grupo
 
-- Matheus: leitura do arquivo, menu, inclusão posterior de vértices e arestas, escolha da loja e exibição da rota. Separar apresentação e leitura de dados da biblioteca.
-- Levi: combinar uma contribuição de código, preparar casos de entrada e conferir a integração; consolidar o relatório com os textos dos integrantes.
+- Matheus: leitura do arquivo, menu com as duas operações (rota completa de entregas e entrega expressa entre dois locais via Dijkstra), inclusão posterior de vértices e arestas, escolha da loja/destino e exibição da rota. Separar apresentação e leitura de dados da biblioteca.
+- Levi: combinar uma contribuição de código (por exemplo, leitor/validador do CSV e testes de integração), preparar casos de entrada e consolidar o relatório com os textos dos integrantes.
 - Grupo: confirmar a divisão efetiva das tarefas e a aprovação do tema e da estratégia; completar as seções 3, 4 e 5 conforme o aplicativo final.
 
-Os slides disponíveis de árvore geradora mínima, Dijkstra e Ford-Fulkerson foram consultados. Eles não contêm o código básico de grafos citado no enunciado nem a busca exata do Caixeiro Viajante. Ainda é necessário conferir a biblioteca com esse material da aula.
+Os slides disponíveis de árvore geradora mínima, Dijkstra e Ford-Fulkerson foram consultados. A classe `Dijkstra` segue a abordagem dos slides da Semana 10 (conjunto de nós rotulados, vetor de distâncias e predecessores). Os slides não contêm uma classe Java pronta para o grafo básico nem a busca exata do Caixeiro Viajante, que foram implementados no projeto.
